@@ -3,224 +3,366 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calc & Tic-Tac-Toe</title>
+    <title>Quantum Calc & Tic-Tac-Toe</title>
     <style>
         :root {
-            --bg: #f0f2f5;
-            --card: #ffffff;
-            --primary: #4a90e2;
-            --accent: #ff6b6b;
-            --text: #333;
+            --bg: #000;
+            --card-bg: #111;
+            --text: #fff;
+            --primary: #ff6b6b; /* Accent Red */
+            --secondary: #4a90e2; /* Blue Glare */
+            --border: #333;
+            --calc-btn: #222;
         }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            padding: 20px;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg);
             color: var(--text);
-        }
-        .container {
-            background: var(--card);
+            margin: 0;
             padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 320px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
-        h2 { text-align: center; margin-top: 0; font-size: 1.2rem; color: var(--primary); }
 
-        /* Calculator Styles */
+        .main-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* Side-by-side */
+            gap: 40px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        /* Responsive Layout */
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr; /* Stack on mobile */
+                gap: 20px;
+            }
+        }
+
+        .panel {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(74, 144, 226, 0.2), 0 0 40px rgba(255, 107, 107, 0.1);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        /* Blue glare/light top tier look */
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(74, 144, 226, 0.4) 0%, rgba(74, 144, 226, 0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        /* Red glare top tier look */
+        .panel::after {
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            left: -30px;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(255, 107, 107, 0.2) 0%, rgba(255, 107, 107, 0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        h2 { text-align: center; color: var(--text); font-weight: 300; margin-bottom: 25px; }
+
+        button {
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        /* --- Calculator Specific --- */
         #calc-display {
             width: 100%;
-            height: 50px;
-            font-size: 1.5rem;
+            height: 60px;
+            font-size: 2.5rem;
             text-align: right;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
             padding: 10px;
-            box-sizing: border-box;
-            border: 2px solid #eee;
-            border-radius: 8px;
-        }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        button {
-            padding: 15px;
-            font-size: 1rem;
+            background: transparent;
+            color: var(--text);
             border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: 0.2s;
-            background: #eee;
+            border-bottom: 2px solid var(--border);
+            box-sizing: border-box;
         }
-        button:hover { background: #ddd; }
-        .op { background: var(--primary); color: white; }
-        .eq { background: #2ecc71; color: white; grid-column: span 2; }
-        .clr { background: var(--accent); color: white; }
+        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .calc-btn { background: var(--calc-btn); color: var(--text); border: none; padding: 20px; }
+        .calc-btn:hover { background: #333; }
+        .calc-op { color: var(--secondary); font-size: 1.2rem; }
+        .calc-eq { background: var(--secondary); grid-column: span 2; color: white; }
+        .calc-eq:hover { background: #5da8ff; }
+        .calc-clr { color: var(--primary); }
 
-        /* Tic Tac Toe Styles */
+        /* --- Tic-Tac-Toe Specific --- */
+        .ttt-controls { display: flex; justify-content: space-around; margin-bottom: 20px; gap: 10px;}
+        .mode-btn { background: transparent; color: #fff; border: 1px solid var(--border); padding: 10px; flex: 1; text-align: center; }
+        .mode-btn.active { background: var(--secondary); border-color: var(--secondary); box-shadow: 0 0 10px rgba(74,144,226, 0.5); }
+
+        #status { text-align: center; margin-top: 15px; font-weight: 300; min-height: 24px; font-size: 1.1rem; color: #aaa; }
+        
         .board {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
-            margin-top: 10px;
+            gap: 10px;
+            margin-bottom: 20px;
         }
         .cell {
             aspect-ratio: 1;
-            background: #f9f9f9;
-            border: 2px solid #eee;
+            background: rgba(255, 255, 255, 0.05);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
-            font-weight: bold;
-            cursor: pointer;
+            font-size: 3rem;
+            font-weight: 200;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            transition: background 0.3s ease;
         }
-        .cell.taken { cursor: not-allowed; }
-        #status { text-align: center; margin-top: 10px; font-weight: bold; height: 20px; }
-        .reset-btn { width: 100%; margin-top: 10px; background: var(--primary); color: white; }
+        .cell:not(.taken):hover { background: rgba(255, 255, 255, 0.1); cursor: pointer;}
+        .cell.X { color: var(--primary); text-shadow: 0 0 10px var(--primary); }
+        .cell.O { color: var(--secondary); text-shadow: 0 0 10px var(--secondary); }
+        
+        .reset-btn { width: 100%; border: 1px solid var(--primary); background: transparent; color: var(--primary); padding: 12px; margin-top: 10px;}
+        .reset-btn:hover { background: var(--primary); color: #fff; box-shadow: 0 0 15px rgba(255, 107, 107, 0.5); }
+
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2>Simple Calculator</h2>
-        <input type="text" id="calc-display" disabled>
-        <div class="grid">
-            <button class="clr" onclick="clearCalc()">C</button>
-            <button onclick="appendToCalc('/')">/</button>
-            <button onclick="appendToCalc('*')">×</button>
-            <button onclick="deleteLast()">⌫</button>
-            <button onclick="appendToCalc('7')">7</button>
-            <button onclick="appendToCalc('8')">8</button>
-            <button onclick="appendToCalc('9')">9</button>
-            <button class="op" onclick="appendToCalc('-')">-</button>
-            <button onclick="appendToCalc('4')">4</button>
-            <button onclick="appendToCalc('5')">5</button>
-            <button onclick="appendToCalc('6')">6</button>
-            <button class="op" onclick="appendToCalc('+')">+</button>
-            <button onclick="appendToCalc('1')">1</button>
-            <button onclick="appendToCalc('2')">2</button>
-            <button onclick="appendToCalc('3')">3</button>
-            <button class="eq" onclick="calculate()">=</button>
-            <button onclick="appendToCalc('0')" style="grid-column: span 2;">0</button>
-            <button onclick="appendToCalc('.')">.</button>
+<div class="main-container">
+
+    <div class="panel">
+        <h2>Quantum Calc</h2>
+        <input type="text" id="calc-display" readonly>
+        <div class="calc-grid">
+            <button class="calc-btn calc-clr" onclick="clearCalc()">AC</button>
+            <button class="calc-btn" onclick="deleteLast()">DEL</button>
+            <button class="calc-btn calc-op" onclick="appendToCalc('%')">%</button>
+            <button class="calc-btn calc-op" onclick="appendToCalc('/')">÷</button>
+            
+            <button class="calc-btn" onclick="appendToCalc('7')">7</button>
+            <button class="calc-btn" onclick="appendToCalc('8')">8</button>
+            <button class="calc-btn" onclick="appendToCalc('9')">9</button>
+            <button class="calc-btn calc-op" onclick="appendToCalc('*')">×</button>
+            
+            <button class="calc-btn" onclick="appendToCalc('4')">4</button>
+            <button class="calc-btn" onclick="appendToCalc('5')">5</button>
+            <button class="calc-btn" onclick="appendToCalc('6')">6</button>
+            <button class="calc-btn calc-op" onclick="appendToCalc('-')">−</button>
+            
+            <button class="calc-btn" onclick="appendToCalc('1')">1</button>
+            <button class="calc-btn" onclick="appendToCalc('2')">2</button>
+            <button class="calc-btn" onclick="appendToCalc('3')">3</button>
+            <button class="calc-btn calc-op" onclick="appendToCalc('+')">+</button>
+            
+            <button class="calc-btn" onclick="appendToCalc('0')" style="grid-column: span 2;">0</button>
+            <button class="calc-btn" onclick="appendToCalc('.')">.</button>
+            <button class="calc-btn calc-eq" onclick="calculate()">=</button>
         </div>
     </div>
 
-    <div class="container">
-        <h2>Tic-Tac-Toe (vs Bot)</h2>
-        <div id="status">Your Turn (X)</div>
+    <div class="panel">
+        <h2>Aetherium Arena</h2>
+        <div class="ttt-controls">
+            <button id="aiBtn" class="mode-btn active" onclick="setMode('ai')">vs AI (Perfect)</button>
+            <button id="pvpBtn" class="mode-btn" onclick="setMode('pvp')">2 Players</button>
+        </div>
+        
         <div class="board" id="board">
-            <div class="cell" onclick="makeMove(0)"></div>
-            <div class="cell" onclick="makeMove(1)"></div>
-            <div class="cell" onclick="makeMove(2)"></div>
-            <div class="cell" onclick="makeMove(3)"></div>
-            <div class="cell" onclick="makeMove(4)"></div>
-            <div class="cell" onclick="makeMove(5)"></div>
-            <div class="cell" onclick="makeMove(6)"></div>
-            <div class="cell" onclick="makeMove(7)"></div>
-            <div class="cell" onclick="makeMove(8)"></div>
+            <div class="cell" onclick="cellClicked(0)"></div>
+            <div class="cell" onclick="cellClicked(1)"></div>
+            <div class="cell" onclick="cellClicked(2)"></div>
+            <div class="cell" onclick="cellClicked(3)"></div>
+            <div class="cell" onclick="cellClicked(4)"></div>
+            <div class="cell" onclick="cellClicked(5)"></div>
+            <div class="cell" onclick="cellClicked(6)"></div>
+            <div class="cell" onclick="cellClicked(7)"></div>
+            <div class="cell" onclick="cellClicked(8)"></div>
         </div>
-        <button class="reset-btn" onclick="resetGame()">Reset Game</button>
+        <div id="status">Player X turn</div>
+        <button class="reset-btn" onclick="resetGame()">Reset Arena</button>
     </div>
 
-    <script>
-        /* --- Calculator Logic --- */
-        const display = document.getElementById('calc-display');
-        function appendToCalc(val) { display.value += val; }
-        function clearCalc() { display.value = ''; }
-        function deleteLast() { display.value = display.value.slice(0, -1); }
-        function calculate() {
-            try { display.value = eval(display.value); }
-            catch { display.value = 'Error'; }
+</div>
+
+<script>
+    /* --- Calculator Logic --- */
+    const display = document.getElementById('calc-display');
+    function appendToCalc(val) { 
+        if(display.value === 'Error') display.value = '';
+        display.value += val; 
+    }
+    function clearCalc() { display.value = ''; }
+    function deleteLast() { display.value = display.value.toString().slice(0, -1); }
+    function calculate() {
+        try { display.value = eval(display.value); }
+        catch { display.value = 'Error'; }
+    }
+
+    /* --- Tic Tac Toe Logic --- */
+    let boardState = Array(9).fill(null);
+    let currentPlayer = 'X';
+    let isAIVersion = true;
+    let gameActive = true;
+    const winCombos = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    const statusText = document.getElementById('status');
+    const cells = document.querySelectorAll('.cell');
+
+    function setMode(mode) {
+        isAIVersion = (mode === 'ai');
+        document.getElementById('aiBtn').classList.toggle('active', isAIVersion);
+        document.getElementById('pvpBtn').classList.toggle('active', !isAIVersion);
+        resetGame();
+    }
+
+    function cellClicked(idx) {
+        if (!gameActive || boardState[idx] || (isAIVersion && currentPlayer === 'O')) return;
+        
+        placeMarker(idx, 'X');
+        if (checkGameOver()) return;
+
+        if (isAIVersion) {
+            currentPlayer = 'O';
+            statusText.innerText = "Quantum AI Thinking...";
+            setTimeout(performAIMove, 700);
+        } else {
+            currentPlayer = 'O';
+            statusText.innerText = "Player O turn";
         }
+    }
 
-        /* --- Tic Tac Toe Logic (Minimax AI) --- */
-        let board = Array(9).fill(null);
-        const player = 'X', bot = 'O';
-        const winCombos = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    // Secondary function for PVP Player O turn
+    function makePvPMove(idx) {
+        placeMarker(idx, 'O');
+        if (checkGameOver()) return;
+        currentPlayer = 'X';
+        statusText.innerText = "Player X turn";
+    }
 
-        function makeMove(idx) {
-            if (!board[idx] && !checkWinner(board)) {
-                board[idx] = player;
-                updateBoard();
-                if (!checkWinner(board) && board.includes(null)) {
-                    setTimeout(botMove, 500);
-                }
+    // Overwrite cellClicked if not AI mode to handle PVP logic correctly
+    function cellClicked(idx) {
+        if (!gameActive || boardState[idx]) return;
+
+        if (isAIVersion) {
+            if(currentPlayer === 'O') return; // Wait for bot
+            placeMarker(idx, 'X');
+            if (checkGameOver()) return;
+            currentPlayer = 'O';
+            statusText.innerText = "Quantum AI Thinking...";
+            setTimeout(performAIMove, 700);
+        } else {
+            placeMarker(idx, currentPlayer);
+            if (checkGameOver()) return;
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            statusText.innerText = `Player ${currentPlayer} turn`;
+        }
+    }
+
+    function placeMarker(idx, player) {
+        boardState[idx] = player;
+        cells[idx].innerText = player;
+        cells[idx].classList.add(player, 'taken');
+    }
+
+    /* --- Unbeatable AI (Minimax) --- */
+    function performAIMove() {
+        let bestScore = -Infinity;
+        let bestMove;
+        for (let i = 0; i < 9; i++) {
+            if (!boardState[i]) {
+                boardState[i] = 'O';
+                let score = minimax(boardState, 0, false);
+                boardState[i] = null;
+                if (score > bestScore) { bestScore = score; bestMove = i; }
             }
         }
+        placeMarker(bestMove, 'O');
+        if (!checkGameOver()) {
+            currentPlayer = 'X';
+            statusText.innerText = "Player X turn";
+        }
+    }
 
-        function botMove() {
+    function minimax(b, depth, isMaximizing) {
+        let result = evaluateWinner(b);
+        if (result === 'O') return 10 - depth;
+        if (result === 'X') return depth - 10;
+        if (!b.includes(null)) return 0;
+
+        if (isMaximizing) {
             let bestScore = -Infinity;
-            let move;
             for (let i = 0; i < 9; i++) {
-                if (!board[i]) {
-                    board[i] = bot;
-                    let score = minimax(board, 0, false);
-                    board[i] = null;
-                    if (score > bestScore) { bestScore = score; move = i; }
+                if (!b[i]) {
+                    b[i] = 'O';
+                    bestScore = Math.max(bestScore, minimax(b, depth + 1, false));
+                    b[i] = null;
                 }
             }
-            board[move] = bot;
-            updateBoard();
-        }
-
-        function minimax(currBoard, depth, isMaximizing) {
-            let result = checkWinner(currBoard);
-            if (result === bot) return 10;
-            if (result === player) return -10;
-            if (!currBoard.includes(null)) return 0;
-
-            if (isMaximizing) {
-                let bestScore = -Infinity;
-                for (let i = 0; i < 9; i++) {
-                    if (!currBoard[i]) {
-                        currBoard[i] = bot;
-                        bestScore = Math.max(bestScore, minimax(currBoard, depth + 1, false));
-                        currBoard[i] = null;
-                    }
+            return bestScore;
+        } else {
+            let bestScore = Infinity;
+            for (let i = 0; i < 9; i++) {
+                if (!b[i]) {
+                    b[i] = 'X';
+                    bestScore = Math.min(bestScore, minimax(b, depth + 1, true));
+                    b[i] = null;
                 }
-                return bestScore;
-            } else {
-                let bestScore = Infinity;
-                for (let i = 0; i < 9; i++) {
-                    if (!currBoard[i]) {
-                        currBoard[i] = player;
-                        bestScore = Math.min(bestScore, minimax(currBoard, depth + 1, true));
-                        currBoard[i] = null;
-                    }
-                }
-                return bestScore;
             }
+            return bestScore;
         }
+    }
 
-        function checkWinner(b) {
-            for (let combo of winCombos) {
-                if (b[combo[0]] && b[combo[0]] === b[combo[1]] && b[combo[0]] === b[combo[2]]) 
-                    return b[combo[0]];
-            }
-            return null;
+    /* --- Helpers --- */
+    function evaluateWinner(b) {
+        for (let combo of winCombos) {
+            if (b[combo[0]] && b[combo[0]] === b[combo[1]] && b[combo[0]] === b[combo[2]]) return b[combo[0]];
         }
+        return null;
+    }
 
-        function updateBoard() {
-            const cells = document.getElementsByClassName('cell');
-            board.forEach((val, i) => {
-                cells[i].innerText = val || '';
-                if (val) cells[i].classList.add('taken');
-            });
-            let win = checkWinner(board);
-            if (win) document.getElementById('status').innerText = win === 'X' ? "You Win!" : "Bot Wins!";
-            else if (!board.includes(null)) document.getElementById('status').innerText = "Draw!";
+    function checkGameOver() {
+        let win = evaluateWinner(boardState);
+        if (win) {
+            statusText.innerText = (isAIVersion && win === 'O') ? "Quantum AI Wins!" : `Player ${win} Wins!`;
+            gameActive = false;
+            return true;
         }
+        if (!boardState.includes(null)) {
+            statusText.innerText = "Temporal Deadlock (Draw)";
+            gameActive = false;
+            return true;
+        }
+        return false;
+    }
 
-        function resetGame() {
-            board = Array(9).fill(null);
-            const cells = document.getElementsByClassName('cell');
-            for (let c of cells) { c.innerText = ''; c.classList.remove('taken'); }
-            document.getElementById('status').innerText = "Your Turn (X)";
-        }
-    </script>
+    function resetGame() {
+        boardState = Array(9).fill(null);
+        currentPlayer = 'X';
+        gameActive = true;
+        statusText.innerText = "Player X turn";
+        cells.forEach(c => {
+            c.innerText = '';
+            c.classList.remove('X', 'O', 'taken');
+        });
+    }
+</script>
+
 </body>
 </html>
